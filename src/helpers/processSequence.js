@@ -14,6 +14,7 @@
  * Иногда промисы от API будут приходить в состояние rejected, (прямо как и API в реальной жизни)
  * Ответ будет приходить в поле {result}
  */
+import * as R from 'ramda';
 import Api from '../tools/api';
 
 const api = new Api();
@@ -31,8 +32,32 @@ const processSequence = ({value, writeLog, handleSuccess, handleError}) => {
      */
     writeLog(value);
 
-    api.get('https://api.tech/numbers/base', {from: 2, to: 10, number: '01011010101'}).then(({result}) => {
+    if (
+        R.equals(false,
+            R.allPass([
+                R.compose(
+                    R.gt(R.__, 2),
+                    R.length
+                ),
+                R.compose(
+                    R.lt(R.__, 10),
+                    R.length
+                ),
+                R.compose(
+                    R.gt(R.__, 0),
+                    R.length,
+                    R.match(/^[0-9]*$/g, R.__)
+                ),
+            ])(value)
+        )
+    ) handleError();
+
+    writeLog(parseInt(value));
+
+    api.get('https://api.tech/numbers/base', {from: 10, to: 2, number: value}).then(({result}) => {
         writeLog(result);
+        writeLog(result.length);
+        writeLog(result ** 2);
     });
 
     wait(2500).then(() => {
